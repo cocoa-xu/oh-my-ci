@@ -21,13 +21,15 @@ jobs:
       - name: Checkout Private Repo A
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.REPO_TOKEN }}
           repository: cocoa-xu/private-a
           ref: feature-x
           path: private-a
 
-      - name: Checkout Private Repo A
+      - name: Checkout Private Repo B
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.REPO_TOKEN }}
           repository: cocoa-xu/private-b
           path: private-b
 
