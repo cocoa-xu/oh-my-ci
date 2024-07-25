@@ -1,0 +1,57 @@
+name: Build with Priv Repo
+
+on:
+  workflow_dispatch:
+    inputs:
+      date_tag:
+        description: 'Custom date tag for base images'
+        required: false
+
+defaults:
+  run:
+    working-directory: ./docker
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Platform
+        uses: actions/checkout@v4
+
+      - name: Checkout Private Repo A
+        uses: actions/checkout@v4
+        with:
+          repository: cocoa-xu/private-a
+          ref: feature-x
+          path: private-a
+
+      - name: Checkout Private Repo A
+        uses: actions/checkout@v4
+        with:
+          repository: cocoa-xu/private-b
+          path: private-b
+
+      - name: Build Docker Images
+        id: base-images
+        run: |
+          CUSTOM_DATE_TAG="${{ github.event.inputs.date_tag }}"
+          if [[ ! -z "${CUSTOM_DATE_TAG:-}" ]]; then
+            export DATE_TAG="${CUSTOM_DATE_TAG}"
+            echo "Using custom date tag: $DATE_TAG"
+          else
+            export DATE_TAG=$(date -I)
+          fi
+          
+          echo "Building base images with date tag $DATE_TAG"
+          bash scripts/build.sh
+          
+          echo "tag=${DATE_TAG}" >> $GITHUB_OUTPUT
+
+      - name: List Docker Images
+        run: |
+          docker images
+
+      - name: Push to Docker hub
+        run: |
+          export DATE_TAG="${{ steps.base-images.outputs.tag }}"
+          echo "Pushing base images with date tag from last step: $DATE_TAG"
